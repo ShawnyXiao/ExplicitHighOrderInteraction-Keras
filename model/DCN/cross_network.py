@@ -23,19 +23,12 @@ class CrossNetwork(Layer):
 
     def call(self, inputs):
         if len(inputs.get_shape()) != 2:
-            raise ValueError(
-                'The rank of input of CrossNetworkLayer must be 2, but now is %d' % len(inputs.get_shape()))
+            raise ValueError('The rank of input of CrossNetworkLayer must be 2, but now is %d' % len(inputs.get_shape()))
         x_l = x_0 = inputs[:, :, tf.newaxis]
         for i in range(self.layer_num):
             x_l = self._cross(x_l, self.ws[i], self.bs[i], x_0)
         x_l = x_l[:, :, 0]
         return x_l
-
-    def get_config(self):
-        config = super(CrossNetwork, self).get_config()
-        config.update({'layer_num': self.layer_num,
-                       'l2_reg': self.l2_reg})
-        return config
 
     def _cross(self, x_l, w_l, b_l, x_0):
         return tf.matmul(x_0, tf.tensordot(x_l, w_l, (1, 0))) + b_l + x_l

@@ -11,9 +11,7 @@ if __name__ == '__main__':
 
     print('Build model...')
     dcn = DCN()
-    dcn.compile(optimizer='adam',
-                loss='binary_crossentropy',
-                metrics=['accuracy'])
+    dcn.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
     print('Train...')
     early_stopping = EarlyStopping(monitor='val_accuracy', patience=3, mode='max')
