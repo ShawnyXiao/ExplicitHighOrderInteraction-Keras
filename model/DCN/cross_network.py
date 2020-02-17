@@ -12,7 +12,7 @@ class CrossNetwork(Layer):
 
     def build(self, input_shape):
         if len(input_shape) != 2:
-            raise ValueError('The rank of input of CrossNetworkLayer must be 2, but now is %d' % len(input_shape))
+            raise ValueError('The rank of input of CrossNetwork must be 2, but now is %d' % len(input_shape))
         self.ws = [self.add_weight(shape=(int(input_shape[1]), 1),
                                    initializer='random_normal',
                                    regularizer=l2(self.l2_reg),
@@ -23,7 +23,7 @@ class CrossNetwork(Layer):
 
     def call(self, inputs):
         if len(inputs.get_shape()) != 2:
-            raise ValueError('The rank of input of CrossNetworkLayer must be 2, but now is %d' % len(inputs.get_shape()))
+            raise ValueError('The rank of input of CrossNetwork must be 2, but now is %d' % len(inputs.get_shape()))
         x_l = x_0 = inputs[:, :, tf.newaxis]
         for i in range(self.layer_num):
             x_l = self._cross(x_l, self.ws[i], self.bs[i], x_0)

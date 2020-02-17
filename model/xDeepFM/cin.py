@@ -30,7 +30,7 @@ class CIN(Layer):
 
     def build(self, input_shape):
         if len(input_shape) != 3:
-            raise ValueError('The rank of input of CINLayer must be 3, but now is %d' % len(input_shape))
+            raise ValueError('The rank of input of CIN must be 3, but now is %d' % len(input_shape))
         self.field_nums = [input_shape.as_list()[1]]
         self.filters = []
         for i, layer_size in enumerate(self.layer_sizes):
@@ -61,7 +61,7 @@ class CIN(Layer):
 
     def call(self, inputs):
         if len(inputs.get_shape()) != 3:
-            raise ValueError('The rank of input of CINLayer must be 3, but now is %d' % len(inputs.get_shape()))
+            raise ValueError('The rank of input of CIN must be 3, but now is %d' % len(inputs.get_shape()))
         emb_size = inputs.get_shape()[2]
         hidden_layers = [inputs]
         final_layers = []
