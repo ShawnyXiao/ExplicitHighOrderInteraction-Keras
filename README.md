@@ -1,6 +1,6 @@
 # HighOrderInteraction-Keras
 
-这个代码仓库使用 **Keras** 框架实现了多种引入**高阶交叉**的**推荐系统模型**，其中包含的模型有：**DCN**, **xDeepFM** 等等。除了模型实现，还附带了简化的应用程序。
+这个代码仓库使用 **Keras** 框架实现了多种引入**显式高阶交叉**的**推荐系统模型**，其中包含的模型有：**DCN**, **xDeepFM** 等等。除了模型实现，还附带了简化的应用程序。
 
 ## 向导
 
@@ -34,5 +34,5 @@
 
 ## 参考文献
 
-1. Wang R, Fu B, Fu G, et al. Deep & cross network for ad click predictions[M]//Proceedings of the ADKDD'17. 2017: 1-7.
-2. Lian J, Zhou X, Zhang F, et al. xdeepfm: Combining explicit and implicit feature interactions for recommender systems[C]//Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining. 2018: 1754-1763.
+1. [Deep & Cross Network for Ad Click Predictions](https://arxiv.org/pdf/1708.05123.pdf)
+2. [xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems](https://arxiv.org/pdf/1803.05170.pdf)
