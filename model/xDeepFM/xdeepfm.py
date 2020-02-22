@@ -9,6 +9,7 @@ from cin import CIN
 class xDeepFM(Model):
 
     def __init__(self,
+                 feat_dense_num=0,
                  feat_sparse_num=0,
                  feat_sparse_vocab_sizes=(),
                  feat_sparse_embedding_sizes=(),
@@ -33,6 +34,7 @@ class xDeepFM(Model):
             raise ValueError('The length of feat_sparse_vocab_sizes must be equal with feat_sparse_num %d, but now is %d' % (feat_sparse_num, len(feat_sparse_vocab_sizes)))
         if len(feat_sparse_embedding_sizes) != feat_sparse_num:
             raise ValueError('The length of feat_sparse_embedding_sizes must be equal with feat_sparse_num %d, but now is %d' % (feat_sparse_num, len(feat_sparse_embedding_sizes)))
+        self.feat_dense_num = feat_dense_num
         self.feat_sparse_num = feat_sparse_num
         self.feat_sparse_vocab_sizes = feat_sparse_vocab_sizes
         self.feat_sparse_embedding_sizes = feat_sparse_embedding_sizes
@@ -54,9 +56,8 @@ class xDeepFM(Model):
             self.embeddings = []
             for i in range(self.feat_sparse_num):
                 self.embeddings.append(Embedding(self.feat_sparse_vocab_sizes[i], self.feat_sparse_embedding_sizes[i]))
-        self.concatenate_input = Concatenate(1)
+        self.concatenate = Concatenate()
         self.linear = Embedding(sum(self.feat_sparse_vocab_sizes), 1)
-        self.flatten = Flatten()
         self.dnn = []
         for dnn_layer_size in self.dnn_layer_sizes:
             self.dnn.append(Dense(dnn_layer_size,
@@ -73,29 +74,41 @@ class xDeepFM(Model):
                        self.cin_activation,
                        self.cin_reduce_filter,
                        self.cin_filter_dim)
-        self.concatenate_output = Concatenate()
         self.classifier = Dense(1, activation='sigmoid')
 
     def call(self, inputs):
         if len(inputs.get_shape()) != 2:
             raise ValueError('The rank of inputs of xDeepFM must be 2, but now is %d' % len(inputs.get_shape()))
-        if inputs.get_shape()[1] != self.feat_sparse_num:
-            raise ValueError('The 2nd dim of inputs of xDeepFM must be %d, but now is %d' % (self.feat_sparse_num, inputs.get_shape()[1]))
-        sparse_input = inputs
-        sparse_embeddings = []
-        for i in range(self.feat_sparse_num):
-            sparse_embedding = self.embeddings[i](sparse_input[:, i])
-            sparse_embedding = sparse_embedding[:, tf.newaxis, :]
-            sparse_embeddings.append(sparse_embedding)
-        all_input = self.concatenate_input(sparse_embeddings)
-        linear_output = self.linear(sparse_input)
-        linear_output = linear_output[:, :, 0]
-        dnn_output = Flatten()(all_input)
+        if inputs.get_shape()[1] != self.feat_dense_num + self.feat_sparse_num:
+            raise ValueError('The 2nd dim of inputs of xDeepFM must be %d, but now is %d' % (self.feat_dense_num + self.feat_sparse_num, inputs.get_shape()[1]))
+        dense_input = inputs[:, :self.feat_dense_num]
+        sparse_input = inputs[:, self.feat_dense_num:]
+        sparse_embeddings = self._get_sparse_embeddings(sparse_input)
+        dnn_input = self._get_dnn_input(dense_input, sparse_embeddings)
+        cin_input = self.concatenate([embedding[:, tf.newaxis, :] for embedding in sparse_embeddings])
+        linear_output = self.linear(sparse_input)[:, :, 0]
+        dnn_output = dnn_input
         for dnn_layer in self.dnn:
             dnn_output = dnn_layer(dnn_output)
         if self.dnn_use_dropout:
             dnn_output = self.dnn_dropout(dnn_output)
-        cin_output = self.cin(all_input)
-        final_output = self.concatenate_output([linear_output, dnn_output, cin_output])
+        cin_output = self.cin(cin_input)
+        final_output = self.concatenate([linear_output, dnn_output, cin_output])
         final_output = self.classifier(final_output)
         return final_output
+
+    def _get_sparse_embeddings(self, sparse_input):
+        sparse_embeddings = []
+        for i in range(self.feat_sparse_num):
+            sparse_embedding = self.embeddings[i](sparse_input[:, i])
+            sparse_embeddings.append(sparse_embedding)
+        return sparse_embeddings
+
+    def _get_dnn_input(self, dense_input, sparse_embeddings):
+        if self.feat_dense_num > 0 and self.feat_sparse_num > 0:
+            dnn_input = self.concatenate([dense_input] + sparse_embeddings)
+        elif self.feat_sparse_num > 0:
+            dnn_input = self.concatenate(sparse_embeddings)
+        else:
+            dnn_input = dense_input
+        return dnn_input

@@ -60,18 +60,10 @@ class DCN(Model):
             raise ValueError('The rank of inputs of DCN must be 2, but now is %d' % len(inputs.get_shape()))
         if inputs.get_shape()[1] != self.feat_dense_num + self.feat_sparse_num:
             raise ValueError('The 2nd dim of inputs of DCN must be %d, but now is %d' % (self.feat_dense_num + self.feat_sparse_num, inputs.get_shape()[1]))
-        if (self.feat_dense_num > 0) and (self.feat_sparse_num > 0):
-            dense_input = inputs[:, :self.feat_dense_num]
-            sparse_input = inputs[:, self.feat_dense_num:]
-            sparse_embeddings = self._get_sparse_embeddings(sparse_input)
-            all_input = self.concatenate([dense_input] + sparse_embeddings)
-        elif self.feat_dense_num > 0:
-            dense_input = inputs
-            all_input = dense_input
-        else:
-            sparse_input = inputs
-            sparse_embeddings = self._get_sparse_embeddings(sparse_input)
-            all_input = self.concatenate(sparse_embeddings)
+        dense_input = inputs[:, :self.feat_dense_num]
+        sparse_input = inputs[:, self.feat_dense_num:]
+        sparse_embeddings = self._get_sparse_embeddings(sparse_input)
+        all_input = self._get_all_input(dense_input, sparse_embeddings)
         deep_output = all_input
         for deep_layer in self.deep_network:
             deep_output = deep_layer(deep_output)
@@ -88,3 +80,12 @@ class DCN(Model):
             sparse_embedding = self.embeddings[i](sparse_input[:, i])
             sparse_embeddings.append(sparse_embedding)
         return sparse_embeddings
+
+    def _get_all_input(self, dense_input, sparse_embeddings):
+        if self.feat_dense_num > 0 and self.feat_sparse_num > 0:
+            all_input = self.concatenate([dense_input] + sparse_embeddings)
+        elif self.feat_sparse_num > 0:
+            all_input = self.concatenate(sparse_embeddings)
+        else:
+            all_input = dense_input
+        return all_input
