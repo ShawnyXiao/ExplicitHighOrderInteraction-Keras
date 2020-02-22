@@ -36,15 +36,30 @@
 上图展示了 DCN 的模型框架，由下至上分别是：输入层，Deep Network（右半部分）与 Cross Network（左半部分），输出层。
 
 1. **输入层**。输入特征主要包含连续型特征（Dense Feature）和离散型特征（Sparse Feature），离散型特征通过 Embedding 层嵌入成向量，并与连续型特征拼接输送给后续模块。
-2. **Deep Network 与 Cross Network**。该模块的作用是将输入层传来的向量进行隐式交叉和显示交叉，学习数据中蕴含的重要信息，并将信息表征成向量输送给最后的输出层。
+2. **Deep Network 模块与 Cross Network 模块**。这两个模块的作用是将输入层传来的向量进行隐式交叉和显示交叉，其中 Cross Network 模块能够对特征进行显式的高阶交叉，进而学习数据中蕴含的重要信息，并将信息表征成向量输送给最后的输出层。
 3. **输出层**。该层接收表征向量，矩阵变换后，通过 Sigmoid 函数进行缩放，得到最终的输出值。
 
 本项目使用 Keras 框架实现了以下的模块和模型：
 
-1. 基于 tf.keras.layers.Layer 类的 Cross Network 模块
-2. 基于 tf.keras.Model 类的 DCN 模型
+1. 基于 `tf.keras.layers.Layer` 类的 `CrossNetwork` 模块
+2. 基于 `tf.keras.Model` 类的 `DCN` 模型
 
 ### 2 xDeepFM
+
+<p align="center">
+	<img src="image/xdeepfm.png">
+</p>
+
+上图展示了 xDeepFM 的模型框架，由下至上分别是：输入层，Linear 模块（左边部分）、CIN 模块（中间部分）与 Plain DNN 模块（右边部分），输出层。
+
+1. **输入层**。输入特征主要包含离散型特征（Sparse Feature）和多值离散型特征（Multi-hot Sparse Feature），这两种特征分别通过 Embedding 层嵌入成向量，并输送给后续模块。
+2. **Linear 模块、CIN 模块与 Plain DNN 模块**。这三个模块的作用是将输入层传来的向量进行隐式交叉和显示交叉，其中 CIN 模块能够以向量粒度进行特征之间的显式高阶交叉，支持 vector-wise 的显式高阶交叉，学习特征之间的相关性，最终表征成向量输送给最后的输出层。
+3. **输出层**。该层接收表征向量，矩阵变换后，通过 Sigmoid 函数进行缩放，得到最终的输出值。
+
+本项目使用 Keras 框架实现了以下的模块和模型：
+
+1. 基于 `tf.keras.layers.Layer` 类的 `CIN` 模块
+2. 基于 `tf.keras.Model` 类的 `xDeepFM` 模型
 
 ### 3 AutoInt
 
