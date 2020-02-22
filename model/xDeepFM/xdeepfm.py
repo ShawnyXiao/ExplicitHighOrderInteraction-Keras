@@ -1,5 +1,6 @@
+import tensorflow as tf
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Dense, Dropout, Concatenate, Flatten
+from tensorflow.keras.layers import Dense, Dropout, Concatenate, Flatten, Embedding
 from tensorflow.keras.regularizers import l2
 
 from cin import CIN
@@ -8,12 +9,15 @@ from cin import CIN
 class xDeepFM(Model):
 
     def __init__(self,
-                 deep_layer_sizes=(256, 128),
-                 deep_use_bias=True,
-                 deep_activation='relu',
-                 deep_l2_reg=0.0,
-                 deep_use_dropout=False,
-                 deep_dropout_rate=0.3,
+                 feat_sparse_num=0,
+                 feat_sparse_vocab_sizes=(),
+                 feat_sparse_embedding_sizes=(),
+                 dnn_layer_sizes=(256, 128),
+                 dnn_use_bias=True,
+                 dnn_activation='relu',
+                 dnn_l2_reg=0.0,
+                 dnn_use_dropout=False,
+                 dnn_dropout_rate=0.3,
                  cin_layer_sizes=(128, 128),
                  cin_is_direct=False,
                  cin_use_bias=False,
@@ -23,12 +27,21 @@ class xDeepFM(Model):
                  cin_reduce_filter=False,
                  cin_filter_dim=2):
         super(xDeepFM, self).__init__()
-        self.deep_layer_sizes = deep_layer_sizes
-        self.deep_use_bias = deep_use_bias
-        self.deep_activation = deep_activation
-        self.deep_l2_reg = deep_l2_reg
-        self.deep_use_dropout = deep_use_dropout
-        self.deep_dropout_rate = deep_dropout_rate
+        if feat_sparse_num == 0:
+            raise ValueError('The feat_sparse_num can not be 0')
+        if len(feat_sparse_vocab_sizes) != feat_sparse_num:
+            raise ValueError('The length of feat_sparse_vocab_sizes must be equal with feat_sparse_num %d, but now is %d' % (feat_sparse_num, len(feat_sparse_vocab_sizes)))
+        if len(feat_sparse_embedding_sizes) != feat_sparse_num:
+            raise ValueError('The length of feat_sparse_embedding_sizes must be equal with feat_sparse_num %d, but now is %d' % (feat_sparse_num, len(feat_sparse_embedding_sizes)))
+        self.feat_sparse_num = feat_sparse_num
+        self.feat_sparse_vocab_sizes = feat_sparse_vocab_sizes
+        self.feat_sparse_embedding_sizes = feat_sparse_embedding_sizes
+        self.dnn_layer_sizes = dnn_layer_sizes
+        self.dnn_use_bias = dnn_use_bias
+        self.dnn_activation = dnn_activation
+        self.dnn_l2_reg = dnn_l2_reg
+        self.dnn_use_dropout = dnn_use_dropout
+        self.dnn_dropout_rate = dnn_dropout_rate
         self.cin_layer_sizes = cin_layer_sizes
         self.cin_is_direct = cin_is_direct
         self.cin_use_bias = cin_use_bias
@@ -37,14 +50,21 @@ class xDeepFM(Model):
         self.cin_activation = cin_activation
         self.cin_reduce_filter = cin_reduce_filter
         self.cin_filter_dim = cin_filter_dim
-        self.deep_network = []
-        for deep_layer_size in self.deep_layer_sizes:
-            self.deep_network.append(Dense(deep_layer_size,
-                                           self.deep_activation,
-                                           self.deep_use_bias,
-                                           kernel_regularizer=l2(self.deep_l2_reg)))
-        if self.deep_use_dropout:
-            self.deep_dropout = Dropout(self.deep_dropout_rate)
+        if self.feat_sparse_num > 0:
+            self.embeddings = []
+            for i in range(self.feat_sparse_num):
+                self.embeddings.append(Embedding(self.feat_sparse_vocab_sizes[i], self.feat_sparse_embedding_sizes[i]))
+        self.concatenate_input = Concatenate(1)
+        self.linear = Embedding(sum(self.feat_sparse_vocab_sizes), 1)
+        self.flatten = Flatten()
+        self.dnn = []
+        for dnn_layer_size in self.dnn_layer_sizes:
+            self.dnn.append(Dense(dnn_layer_size,
+                                  self.dnn_activation,
+                                  self.dnn_use_bias,
+                                  kernel_regularizer=l2(self.dnn_l2_reg)))
+        if self.dnn_use_dropout:
+            self.dnn_dropout = Dropout(self.dnn_dropout_rate)
         self.cin = CIN(self.cin_layer_sizes,
                        self.cin_is_direct,
                        self.cin_use_bias,
@@ -53,17 +73,29 @@ class xDeepFM(Model):
                        self.cin_activation,
                        self.cin_reduce_filter,
                        self.cin_filter_dim)
+        self.concatenate_output = Concatenate()
         self.classifier = Dense(1, activation='sigmoid')
 
     def call(self, inputs):
-        if len(inputs.get_shape()) != 3:
-            raise ValueError('The rank of inputs of xDeepFM must be 3, but now is %d' % len(inputs.get_shape()))
-        deep_output = Flatten()(inputs)
-        for deep_layer in self.deep_network:
-            deep_output = deep_layer(deep_output)
-        if self.deep_use_dropout:
-            deep_output = self.deep_dropout(deep_output)
-        cin_output = self.cin(inputs)
-        final_output = Concatenate()([deep_output, cin_output])
+        if len(inputs.get_shape()) != 2:
+            raise ValueError('The rank of inputs of xDeepFM must be 2, but now is %d' % len(inputs.get_shape()))
+        if inputs.get_shape()[1] != self.feat_sparse_num:
+            raise ValueError('The 2nd dim of inputs of xDeepFM must be %d, but now is %d' % (self.feat_sparse_num, inputs.get_shape()[1]))
+        sparse_input = inputs
+        sparse_embeddings = []
+        for i in range(self.feat_sparse_num):
+            sparse_embedding = self.embeddings[i](sparse_input[:, i])
+            sparse_embedding = sparse_embedding[:, tf.newaxis, :]
+            sparse_embeddings.append(sparse_embedding)
+        all_input = self.concatenate_input(sparse_embeddings)
+        linear_output = self.linear(sparse_input)
+        linear_output = linear_output[:, :, 0]
+        dnn_output = Flatten()(all_input)
+        for dnn_layer in self.dnn:
+            dnn_output = dnn_layer(dnn_output)
+        if self.dnn_use_dropout:
+            dnn_output = self.dnn_dropout(dnn_output)
+        cin_output = self.cin(all_input)
+        final_output = self.concatenate_output([linear_output, dnn_output, cin_output])
         final_output = self.classifier(final_output)
         return final_output
