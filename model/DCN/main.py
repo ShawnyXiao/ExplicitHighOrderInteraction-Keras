@@ -5,12 +5,18 @@ from tensorflow.keras.callbacks import EarlyStopping
 from dcn import DCN
 
 if __name__ == '__main__':
-    x = np.random.random((1000, 32))
+    print('Generate fake data...')
+    x_dense = np.random.random((1000, 5))
+    x_sparse = np.random.randint(0, 3, (1000, 7))
+    x = np.concatenate([x_dense, x_sparse], axis=1)
     y = np.random.randint(0, 2, (1000, 1))
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=2020)
 
     print('Build model...')
-    dcn = DCN()
+    dcn = DCN(feat_dense_num=5,
+              feat_sparse_num=7,
+              feat_sparse_vocab_sizes=[3] * 7,
+              feat_sparse_embedding_sizes=[32] * 7)
     dcn.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
     print('Train...')
