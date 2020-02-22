@@ -41,8 +41,8 @@
 
 本项目使用 Keras 框架实现了以下的模块和模型：
 
-1. 基于 `tf.keras.layers.Layer` 类的 `CrossNetwork` 模块
-2. 基于 `tf.keras.Model` 类的 `DCN` 模型
+1. 基于 `tf.keras.layers.Layer` 类的 [`CrossNetwork`](https://github.com/ShawnyXiao/HighOrderInteraction-Keras/blob/master/model/DCN/cross_network.py) 模块
+2. 基于 `tf.keras.Model` 类的 [`DCN`](https://github.com/ShawnyXiao/HighOrderInteraction-Keras/blob/master/model/DCN/dcn.py) 模型
 
 ### 2 xDeepFM
 
@@ -58,8 +58,8 @@
 
 本项目使用 Keras 框架实现了以下的模块和模型：
 
-1. 基于 `tf.keras.layers.Layer` 类的 `CIN` 模块
-2. 基于 `tf.keras.Model` 类的 `xDeepFM` 模型
+1. 基于 `tf.keras.layers.Layer` 类的 [`CIN`](https://github.com/ShawnyXiao/HighOrderInteraction-Keras/blob/master/model/xDeepFM/cin.py) 模块
+2. 基于 `tf.keras.Model` 类的 [`xDeepFM`](https://github.com/ShawnyXiao/HighOrderInteraction-Keras/blob/master/model/xDeepFM/xdeepfm.py) 模型
 
 ### 3 AutoInt
 
