@@ -40,24 +40,28 @@ class CIN(Layer):
                 field_num = int(layer_size / 2)
             self.field_nums.append(field_num)
             if self.reduce_filter:
-                filter_0 = self.add_weight(shape=(1, layer_size, self.field_nums[0], self.filter_dim),
+                filter_0 = self.add_weight(name='filter_0_%d' % i,
+                                           shape=(1, layer_size, self.field_nums[0], self.filter_dim),
                                            initializer='random_normal',
                                            trainable=True)
-                filter_1 = self.add_weight(shape=(1, layer_size, self.filter_dim, self.field_nums[i]),
+                filter_1 = self.add_weight(name='filter_1_%d' % i,
+                                           shape=(1, layer_size, self.filter_dim, self.field_nums[i]),
                                            initializer='random_normal',
                                            trainable=True)
                 filter = tf.matmul(filter_0, filter_1)
                 filter = tf.reshape(filter, shape=(1, layer_size, self.field_nums[0] * self.field_nums[i]))
                 filter = tf.transpose(filter, perm=(0, 2, 1))
             else:
-                filter = self.add_weight(shape=(1, self.field_nums[0] * self.field_nums[i], layer_size),
+                filter = self.add_weight(name='filter_%d' % i,
+                                         shape=(1, self.field_nums[0] * self.field_nums[i], layer_size),
                                          initializer='random_normal',
                                          trainable=True)
             self.filters.append(filter)
         if self.use_bias:
-            self.biases = [self.add_weight(shape=(layer_size),
+            self.biases = [self.add_weight(name='biases_%d' % i,
+                                           shape=layer_size,
                                            initializer='zeros',
-                                           trainable=True) for layer_size in self.layer_sizes]
+                                           trainable=True) for (i, layer_size) in enumerate(self.layer_sizes)]
 
     def call(self, inputs):
         if len(inputs.get_shape()) != 3:

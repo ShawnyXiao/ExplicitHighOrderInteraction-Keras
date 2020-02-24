@@ -13,11 +13,13 @@ class CrossNetwork(Layer):
     def build(self, input_shape):
         if len(input_shape) != 2:
             raise ValueError('The rank of input of CrossNetwork must be 2, but now is %d' % len(input_shape))
-        self.ws = [self.add_weight(shape=(int(input_shape[1]), 1),
+        self.ws = [self.add_weight(name='ws',
+                                   shape=(int(input_shape[1]), 1),
                                    initializer='random_normal',
                                    regularizer=l2(self.l2_reg),
                                    trainable=True) for _ in range(self.layer_num)]
-        self.bs = [self.add_weight(shape=(int(input_shape[1]), 1),
+        self.bs = [self.add_weight(name='bs',
+                                   shape=(int(input_shape[1]), 1),
                                    initializer='zeros',
                                    trainable=True) for _ in range(self.layer_num)]
 
