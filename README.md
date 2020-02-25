@@ -41,8 +41,8 @@
 
 本项目使用 Keras 框架实现了以下的模块和模型：
 
-1. 基于 `tf.keras.layers.Layer` 类的 [`CrossNetwork`](https://github.com/ShawnyXiao/HighOrderInteraction-Keras/blob/master/model/DCN/cross_network.py) 模块
-2. 基于 `tf.keras.Model` 类的 [`DCN`](https://github.com/ShawnyXiao/HighOrderInteraction-Keras/blob/master/model/DCN/dcn.py) 模型
+1. 基于 `tf.keras.layers.Layer` 类的 [`CrossNetwork`](https://github.com/ShawnyXiao/ExplicitHighOrderInteraction-Keras/blob/master/model/DCN/cross_network.py) 模块
+2. 基于 `tf.keras.Model` 类的 [`DCN`](https://github.com/ShawnyXiao/ExplicitHighOrderInteraction-Keras/blob/master/model/DCN/dcn.py) 模型
 
 ### 2 xDeepFM
 
@@ -58,10 +58,25 @@
 
 本项目使用 Keras 框架实现了以下的模块和模型：
 
-1. 基于 `tf.keras.layers.Layer` 类的 [`CIN`](https://github.com/ShawnyXiao/HighOrderInteraction-Keras/blob/master/model/xDeepFM/cin.py) 模块
-2. 基于 `tf.keras.Model` 类的 [`xDeepFM`](https://github.com/ShawnyXiao/HighOrderInteraction-Keras/blob/master/model/xDeepFM/xdeepfm.py) 模型
+1. 基于 `tf.keras.layers.Layer` 类的 [`CIN`](https://github.com/ShawnyXiao/ExplicitHighOrderInteraction-Keras/blob/master/model/xDeepFM/cin.py) 模块
+2. 基于 `tf.keras.Model` 类的 [`xDeepFM`](https://github.com/ShawnyXiao/ExplicitHighOrderInteraction-Keras/blob/master/model/xDeepFM/xdeepfm.py) 模型
 
 ### 3 AutoInt
+
+<p align="center">
+	<img src="image/autoint.png">
+</p>
+
+上图展示了 AutoInt 的模型框架，由下至上分别是：输入层，Interacting Layer 模块，输出层。
+
+1. **输入层**。输入特征主要包含离散型特征（Sparse Feature）和连续型特征（Dense Feature），这两种特征分别通过 Embedding 层嵌入成向量，并输送给后续模块。其中，比较特殊的是，连续型特征的 Embedding 采用了一个默认 Embedding 乘以连续值的方式生成。
+2. **Interacting Layer 模块**。该模块的作用是将输入层传来的向量进行显式交叉，Interacting Layer 模块使用 Mulit-Head Self-Attention 机制对特征进行显式高阶交叉，并引入残差连接，学习组合特征之间的隐含信息，最终表征成向量输送给最后的输出层。
+3. **输出层**。该层接收表征向量，矩阵变换后，通过 Sigmoid 函数进行缩放，得到最终的输出值。
+
+本项目使用 Keras 框架实现了以下的模块和模型：
+
+1. 基于 `tf.keras.layers.Layer` 类的 [`LayerNormalization`](https://github.com/ShawnyXiao/ExplicitHighOrderInteraction-Keras/blob/master/model/AutoInt/layer_normalization.py) 层和 [`InteractingLayer`](https://github.com/ShawnyXiao/ExplicitHighOrderInteraction-Keras/blob/master/model/AutoInt/interacting_layer.py) 模块
+2. 基于 `tf.keras.Model` 类的 [`AutoInt`](https://github.com/ShawnyXiao/ExplicitHighOrderInteraction-Keras/blob/master/model/AutoInt/autoint.py) 模型（该实现实际上对应论文中的 AutoInt+ 模型，为模型增加了 Deep 部分，对特征进行隐式高阶交叉）
 
 ### 未完待续……
 
