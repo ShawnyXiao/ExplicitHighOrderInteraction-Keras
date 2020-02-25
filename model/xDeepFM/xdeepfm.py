@@ -56,7 +56,6 @@ class xDeepFM(Model):
             self.embeddings = []
             for i in range(self.feat_sparse_num):
                 self.embeddings.append(Embedding(self.feat_sparse_vocab_sizes[i], self.feat_sparse_embedding_sizes[i]))
-        self.concatenate = Concatenate()
         self.linear = Embedding(sum(self.feat_sparse_vocab_sizes), 1)
         self.dnn = []
         for dnn_layer_size in self.dnn_layer_sizes:
@@ -74,6 +73,8 @@ class xDeepFM(Model):
                        self.cin_activation,
                        self.cin_reduce_filter,
                        self.cin_filter_dim)
+        self.concatenate = Concatenate()
+        self.cin_input_concatenate = Concatenate(1)
         self.classifier = Dense(1, activation='sigmoid')
 
     def call(self, inputs):
@@ -85,7 +86,8 @@ class xDeepFM(Model):
         sparse_input = inputs[:, self.feat_dense_num:]
         sparse_embeddings = self._get_sparse_embeddings(sparse_input)
         dnn_input = self._get_dnn_input(dense_input, sparse_embeddings)
-        cin_input = self.concatenate([embedding[:, tf.newaxis, :] for embedding in sparse_embeddings])
+        cin_input = self.cin_input_concatenate([embedding[:, tf.newaxis, :] for embedding in sparse_embeddings])
+        print(cin_input.get_shape())
         linear_output = self.linear(sparse_input)[:, :, 0]
         dnn_output = dnn_input
         for dnn_layer in self.dnn:

@@ -43,7 +43,6 @@ class DCN(Model):
             self.embeddings = []
             for i in range(self.feat_sparse_num):
                 self.embeddings.append(Embedding(self.feat_sparse_vocab_sizes[i], self.feat_sparse_embedding_sizes[i]))
-        self.concatenate = Concatenate()
         self.deep_network = []
         for deep_layer_size in self.deep_layer_sizes:
             self.deep_network.append(Dense(deep_layer_size,
@@ -53,6 +52,7 @@ class DCN(Model):
         if self.deep_use_dropout:
             self.deep_dropout = Dropout(self.deep_dropout_rate)
         self.cross_network = CrossNetwork(self.cross_layer_num, self.cross_l2_reg)
+        self.concatenate = Concatenate()
         self.classifier = Dense(1, activation='sigmoid')
 
     def call(self, inputs):
