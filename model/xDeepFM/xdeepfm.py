@@ -87,7 +87,6 @@ class xDeepFM(Model):
         sparse_embeddings = self._get_sparse_embeddings(sparse_input)
         dnn_input = self._get_dnn_input(dense_input, sparse_embeddings)
         cin_input = self.cin_input_concatenate([embedding[:, tf.newaxis, :] for embedding in sparse_embeddings])
-        print(cin_input.get_shape())
         linear_output = self.linear(sparse_input)[:, :, 0]
         dnn_output = dnn_input
         for dnn_layer in self.dnn:
